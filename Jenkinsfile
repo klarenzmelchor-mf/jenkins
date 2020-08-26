@@ -51,7 +51,7 @@ try {
 		node("IAM"){
 				try {
 				stage("SCM"){
-                    cleanWS()
+                    cleanWs()
 					checkout scm
 
                     def inputData = readFile('Jenkinsfile.UnsecuredSettings.json')
