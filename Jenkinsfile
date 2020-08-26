@@ -40,11 +40,11 @@ println "S3 Job name='${context.s3JobName}'"
 println "Build number='${env.BUILD_NUMBER}'"
 println "uuid='${context.uuid}'"
 
-properties([
-        buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '5')),
-        [$class: 'RebuildSettings', autoRebuild: false, rebuildDisabled: false],
-        pipelineTriggers([[$class: 'PeriodicFolderTrigger', interval: '1m']])
-])
+// properties([
+//         buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '5')),
+//         [$class: 'RebuildSettings', autoRebuild: false, rebuildDisabled: false],
+//         pipelineTriggers([[$class: 'PeriodicFolderTrigger', interval: '1m']])
+// ])
 
 try {
     lock("${context.application}-${context.branchName}-build") {
