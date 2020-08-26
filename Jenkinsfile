@@ -54,8 +54,8 @@ try {
                     cleanWs()
 					checkout scm
 
-                    def inputData = readFile('Jenkinsfile.UnsecuredSettings.json')
-                    context.settings = parseJson(inputData)
+                    // def inputData = readFile('Jenkinsfile.UnsecuredSettings.json')
+                    // context.settings = parseJson(inputData)
                     echo("Stage: SCM")
                     
 				}
@@ -67,7 +67,7 @@ try {
 				}
 
                 stage('Package') {
-                    steps{
+                    step{
                         packageIAM()
                    }
                 }
@@ -93,7 +93,9 @@ try {
 			}
 			finally {
 				//step([$class: 'WsCleanup', notFailBuild: true])   
-                echo("Finally")
+                step{
+                    cleanWs(notFailBuild=true)
+                }
 			}
 		}
     }
@@ -155,7 +157,7 @@ def packageIAM()
                 //         --docker-build-path "." \
                 //         --build-arg GITHUB_OAUTH_TOKEN="$GITHUB_OAUTH_TOKEN"
                 //   '''
-                echo("packageIAM")           
+                println "packageIAM"          
 }
 
 def dockerizeMainAPI(def context)
