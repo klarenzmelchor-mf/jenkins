@@ -39,62 +39,92 @@ println "Job name='${env.JOB_NAME}'"
 println "S3 Job name='${context.s3JobName}'"
 println "Build number='${env.BUILD_NUMBER}'"
 println "uuid='${context.uuid}'"
-
-// properties([
-//         buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '5')),
-//         [$class: 'RebuildSettings', autoRebuild: false, rebuildDisabled: false],
-//         pipelineTriggers([[$class: 'PeriodicFolderTrigger', interval: '1m']])
-// ])
+println "Product IDS='$printArray(${prodids})'"
 
 try {
     lock("${context.application}-${context.branchName}-build") {
-		node("IAM"){
-				try {
-				stage("SCM"){
-                    cleanWs()
-					checkout scm
+		node("master"){
+            "${prodids}".each{ item ->
+                def prodid = "${item}"
+                def product = new Products("${prodid}")
+                
+                // AA
+                if (product.isAA()) {
+                    println "${prodid}"
 
-                    // def inputData = readFile('Jenkinsfile.UnsecuredSettings.json')
-                    // context.settings = parseJson(inputData)
-                    echo("Stage: SCM")
+                    try {
+
+                        stage("SCM") {
+                            cleanWs()
+                            checkout scm
+                            echo("Stage: SCM")
+                        }
+
+                        // stage("BUILD INFRA") {
+                        //     echo("Stage: Build Infra")
+                        // }
+
+                        // stage('Package') {                        
+                        //     packageIAM()
+                        // }
+
+                        // stage("Unit Tests") {                   
+                        //     echo("Stage: Unit Tests")
+                        // }
+
+                        // stage("Code Analytics") {
+                        //     echo("Stage: Code Analytics")
+                        // }
+
+                        // stage("Package") {                    
+                        //     echo("Stage: Package")
+                        // }
+                    }
+                    finally {
+                        cleanWs notFailBuild: true
+                    }
                     
-				}
-
-				stage("Build") {
-                    //setupbuild([workingDir: "src", codePath: "iam.microservice1.dockerfile", params: ""])  //params could be ports output to etc
-                    //artifactsbuild([workingDir: "src", codePath: "iam.microservice1.dockerfile", params: ""])
-                    echo("Stage: Build")
-				}
-
-                stage('Package') {
-                
-                    packageIAM()
-                
-                }
-				stage("Unit Tests") {                   
-                    // runUnitTests(
-                    //     [
-                    //         projects: findUnitTestProjects(),
-                    //         params: "--no-build -c Release --filter Category=Unit"
-                    //     ])
-                    echo("Stage: Unit Tests")
                 }
 
-				stage("Code Analytics") {
-                // TBD
-                    echo("Stage: Code Analytics")
-				}
+                // AA
+                if (product.isIG()) {
+                    println "${prodid}"
 
-				stage("Package") {                    
-                    // package([solutionPath: "coe_ssa_saas.packagefile", params: ""])                    
-					// stash name: "${context.application}-${context.branchName}"
-                    echo("Stage: Package")
-				}
-			}
-			finally {
-				//step([$class: 'WsCleanup', notFailBuild: true])   
-                cleanWs(notFailBuild=true)
-			}
+                    try {
+
+                        stage("SCM"){
+                            cleanWs()
+                            checkout scm
+                            echo("Stage: SCM")
+                        }
+
+                        stage("BUILD INFRA") {)
+                            echo("Stage: Build Infra")
+                        }
+
+                        stage('Package') {                        
+                            packageIAM()
+                        }
+                        
+                        stage("Unit Tests") {                   
+                            echo("Stage: Unit Tests")
+                        }
+
+                        stage("Code Analytics") {
+                            echo("Stage: Code Analytics")
+                        }
+
+                        stage("Package") {                    
+                            echo("Stage: Package")
+                        }
+                    }
+                    finally {
+                        cleanWs notFailBuild: true
+                    }
+                    
+                }
+            }
+				
 		}
     }
 }
@@ -103,6 +133,14 @@ catch (Exception e){
     //can we replace this with a Teams send ??  To a group??    
     //slackSend channel: "#${context.application}-api", teamDomain: 'coe_ssa_saassupport', token: '????', color: 'danger', message: "'${context.application}-api' branch '${env.BRANCH_NAME}' build #${env.BUILD_NUMBER} failed with error: ${e}. (<${env.BUILD_URL}|Open>)"    
     throw e
+}
+
+def printArray(list) {
+    for (int i = 0; i < list.size(); i++) {
+        output = "${list[i]}"
+
+        return output
+    }
 }
 
 @NonCPS
@@ -631,6 +669,34 @@ def findUnitTestProjects()
        filePaths.add(files[i].path)
         
     return filePaths
+}
+
+class Products implements Serializable {
+    private String _productId
+
+    boolean isAA() {
+        this._productId == "aa" || this._productId == "AA"
+    }
+
+    boolean isIG() {
+        this._productId == "ig" || this._productId == "IG"
+    }
+
+    boolean isIDM() {
+        this._productId == "idm" || this._productId == "IDM"
+    }
+
+    boolean isArcSight() {
+        this._productId == "arcsight" || this._productId == "ARCSIGHT"
+    }
+
+    boolean isInterset() {
+        this._productId == "interset" || this._productId == "INTERSET"
+    }
+
+    boolean isFASDPP() {
+        this._productId == "fasdpp" || this._productId == "FASDPP"
+    }
 }
 
 class BranchFlags implements Serializable {
