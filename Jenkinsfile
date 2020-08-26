@@ -33,23 +33,20 @@ def context = [
 def regionMap = loadRegionMap(flags)
 
 println "Pipeline Version='${context.version}'"
-println "Environment='${env}'"
+println "Environment='${ENV_NAME}'"
 println "Branch name='${env.BRANCH_NAME}'"
 println "Job name='${env.JOB_NAME}'"
 println "S3 Job name='${context.s3JobName}'"
 println "Build number='${env.BUILD_NUMBER}'"
 println "uuid='${context.uuid}'"
-println "Product IDS='$printArray(${prodids})'"
 
 try {
     lock("${context.application}-${context.branchName}-build") {
 		node("master"){
-            "${prodids}".each{ item ->
-                def prodid = "${item}"
-                def product = new Products("${prodid}")
+            ['aa','ig'].each{ prodid ->
                 
                 // AA
-                if (product.isAA()) {
+                if (prodid == "AA" || prodid == "aa") {
                     println "${prodid}"
 
                     try {
@@ -60,25 +57,25 @@ try {
                             echo("Stage: SCM")
                         }
 
-                        // stage("BUILD INFRA") {
-                        //     echo("Stage: Build Infra")
-                        // }
+                        stage("Build Infra") {
+                            echo("Stage: Build Infra")
+                        }
 
-                        // stage('Package') {                        
-                        //     packageIAM()
-                        // }
+                        stage('Package') {                        
+                            packageIAM()
+                        }
 
-                        // stage("Unit Tests") {                   
-                        //     echo("Stage: Unit Tests")
-                        // }
+                        stage("Unit Tests") {                   
+                            echo("Stage: Unit Tests")
+                        }
 
-                        // stage("Code Analytics") {
-                        //     echo("Stage: Code Analytics")
-                        // }
+                        stage("Code Analytics") {
+                            echo("Stage: Code Analytics")
+                        }
 
-                        // stage("Package") {                    
-                        //     echo("Stage: Package")
-                        // }
+                        stage("Package") {                    
+                            echo("Stage: Package")
+                        }
                     }
                     finally {
                         cleanWs notFailBuild: true
@@ -86,8 +83,8 @@ try {
                     
                 }
 
-                // AA
-                if (product.isIG()) {
+                // IG
+                if (prodid == "ig" || prodid == "IG") {
                     println "${prodid}"
 
                     try {
@@ -98,7 +95,7 @@ try {
                             echo("Stage: SCM")
                         }
 
-                        stage("BUILD INFRA") {)
+                        stage("Build Infra") {
                             echo("Stage: Build Infra")
                         }
 
@@ -133,14 +130,6 @@ catch (Exception e){
     //can we replace this with a Teams send ??  To a group??    
     //slackSend channel: "#${context.application}-api", teamDomain: 'coe_ssa_saassupport', token: '????', color: 'danger', message: "'${context.application}-api' branch '${env.BRANCH_NAME}' build #${env.BUILD_NUMBER} failed with error: ${e}. (<${env.BUILD_URL}|Open>)"    
     throw e
-}
-
-def printArray(list) {
-    for (int i = 0; i < list.size(); i++) {
-        output = "${list[i]}"
-
-        return output
-    }
 }
 
 @NonCPS
