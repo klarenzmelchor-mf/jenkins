@@ -1,7 +1,7 @@
 def infra = new InfraModel()
 def flags = new BranchFlags("${env.BRANCH_NAME}")
 
-library 'common-libraries'
+// library 'common-libraries'
 
 def context = [
     now                 : new Date(),
