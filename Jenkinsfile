@@ -27,12 +27,13 @@ println "Job name='${env.JOB_NAME}'"
 println "Build number='${env.BUILD_NUMBER}'"
 println "uuid='${context.uuid}'"
 
-def inputData = readFile('Jenkinsfile.UnsecuredSettings.json')
-context.settings = parseJson(inputData)
-
 try {
     lock("${context.application}-${context.branchName}-build") {
 		node("master"){
+            
+            def inputData = readFile('Jenkinsfile.UnsecuredSettings.json')
+            context.settings = parseJson(inputData)
+
            "${context.settings.ProductIds}".each{ prodId ->
                 
                 // AA
