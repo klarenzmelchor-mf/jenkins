@@ -51,23 +51,19 @@ try {
 		node("IAM"){
 				try {
 				stage("SCM"){
-                    WsCleanup()
+                    cleanWS()
 					checkout scm
 
                     def inputData = readFile('Jenkinsfile.UnsecuredSettings.json')
                     context.settings = parseJson(inputData)
-                    sh '''
-                        echo "Stage: SCM"
-                    '''
+                    echo("Stage: SCM")
                     
 				}
 
 				stage("Build") {
                     //setupbuild([workingDir: "src", codePath: "iam.microservice1.dockerfile", params: ""])  //params could be ports output to etc
                     //artifactsbuild([workingDir: "src", codePath: "iam.microservice1.dockerfile", params: ""])
-                    sh '''
-                        echo "Stage: Build"
-                    '''
+                    echo("Stage: Build")
 				}
 
                 stage('Package') {
@@ -81,28 +77,23 @@ try {
                     //         projects: findUnitTestProjects(),
                     //         params: "--no-build -c Release --filter Category=Unit"
                     //     ])
-                    sh '''
-                        echo "Stage: Unit Tests"
-                    '''
+                    echo("Stage: Unit Tests")
                 }
 
 				stage("Code Analytics") {
                 // TBD
-                    sh '''
-                        echo "Stage: Code Analytics"
-                    '''
+                    echo("Stage: Code Analytics")
 				}
 
 				stage("Package") {                    
                     // package([solutionPath: "coe_ssa_saas.packagefile", params: ""])                    
 					// stash name: "${context.application}-${context.branchName}"
-                    sh '''
-                        echo "Stage: Package"
-                    '''
+                    echo("Stage: Package")
 				}
 			}
 			finally {
-				step([$class: 'WsCleanup', notFailBuild: true])
+				//step([$class: 'WsCleanup', notFailBuild: true])   
+                echo("Finally")
 			}
 		}
     }
@@ -164,16 +155,12 @@ def packageIAM()
                 //         --docker-build-path "." \
                 //         --build-arg GITHUB_OAUTH_TOKEN="$GITHUB_OAUTH_TOKEN"
                 //   '''
-                sh '''
-                    echo "packageIAM"
-                '''            
+                echo("packageIAM")           
 }
 
 def dockerizeMainAPI(def context)
 {
-    sh '''
-        echo "dockerizeMainAPI"
-    '''
+     echo("dockerizeMainAPI")  
     // //container registry
     // ecr.createRepository([repositoryName: "${context.application}/api", region: context.region, profile: context.profile ])
 
@@ -224,9 +211,7 @@ def dockerizeMainAPI(def context)
 
 def runTerraform(InfraModel model, def context, def regionMap) {
     println "In runTerraform - uuid='${context.uuid}'"
-    sh '''
-        echo "runTerraform"
-    '''
+    echo("runTerraform")  
 // try{
     
 //     //what do we need to do here before apply??
@@ -313,9 +298,7 @@ def runTerraformMainAPI(InfraModel model, def context, def regionMap) {
     def authEnvironment = getSetting(context.settings, "AuthEnvironment", model.environment)
     def appComponent = "mainapi"
 
-    sh '''
-        echo "runTerraformMainAPI"
-    '''
+    echo("runTerraformMainAPI")  
 
     //  //what do we need to do here before apply??
     // stage('inittf'){
@@ -398,9 +381,7 @@ def runTerraformStage(InfraModel model, def context, def regionMap) {
     println "In runTerraformStage - uuid='${context.uuid}'"
     def authEnvironment = getSetting(context.settings, "AuthEnvironment", model.environment)
 
-    sh '''
-        echo "runTerraformStage"
-    '''
+    echo("packageIAM")  
 
 //    //what do we need to do here before apply??
 //     stage('inittf'){
@@ -488,9 +469,7 @@ def runApps(InfraModel model, def context, def regionMap) {
         profile   : context.profile
     ])
 
-    sh '''
-        echo "runApps"
-    '''
+    echo("runApps")  
 
 //     def domain = cloudformation.getExportValue([
 //         exportName: "dns-${model.environment}-${context.domainCountryCode}-${context.certSuffix}-SubZoneDomain",
