@@ -46,7 +46,7 @@ try {
 
                 }
 
-                context.settings.ProductIds.each{ prodId ->
+                context.settings.ProductIds.Default.each{ prodId ->
 
                     stage("Build Infra - ${prodId}") {
                         
