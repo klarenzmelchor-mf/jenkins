@@ -6,26 +6,14 @@ def flags = new BranchFlags("${env.BRANCH_NAME}")
 def context = [
     now                 : new Date(),
     branchName          : flags._branchName,
-    application         : "coe_ssa_saas",
-    applicationUriRoot  : "coe_ssa_saas",
-    applicationVersion  : "0.1.0",
     version             : env.BUILD_NUMBER,    
-    certificatesBucket  : flags.isReleasableBranch() ? "coe_ssa_saas-certificates" : "coe_ssa_saas-certificates-dev",
-    certSuffix          : 'IAM-SAAS',
-    domain              : 'us.IAM-SAAS.com',
-    domainCountryCode   : 'us',
-    authDomain          : 'coe_ssa_saas.auth0.com',
     profile             : flags.isReleasableBranch() ? "coe_ssa_saas-prod" : "coe_ssa_saas-dev",
     uuid                : flags.isHotfixOrFeature() ? getBranchUuid(flags._branchName) : "",    
     region              : flags.isReleasableBranch() ? "us-east-1" : "us-east-1",
     account             : flags.isReleasableBranch() ? "prod" : "dev",
     accountnumber       : flags.isReleasableBranch() ? "621270530972" : "621270530972",
-    authorizerName      : flags.isReleasableBranch() ? "some-aa-url" : "some-aa-url",
     isUnique            : flags.isHotfixOrFeature() ? "yes" : "no",
     errorPolicy         : flags.isReleasableBranch() ? "Never" : "Always",
-    sslFlags            : flags.isReleasableBranch() ? "Ssl" : "None",
-    autoScaleMinSize    : flags.isReleasableBranch() ? 2 : 1,
-    autoScaleMaxSize    : flags.isReleasableBranch() ? 2 : 1,
     loggingLevel        : flags.isReleasableBranch() ? "Info" : "Trace",
     s3JobName           : "${env.JOB_NAME}".replaceAll('%2F', '%252F'),        
 ]
@@ -36,14 +24,16 @@ println "Pipeline Version='${context.version}'"
 println "Environment='${ENV_NAME}'"
 println "Branch name='${env.BRANCH_NAME}'"
 println "Job name='${env.JOB_NAME}'"
-println "S3 Job name='${context.s3JobName}'"
 println "Build number='${env.BUILD_NUMBER}'"
 println "uuid='${context.uuid}'"
+
+def inputData = readFile('Jenkinsfile.UnsecuredSettings.json')
+context.settings = parseJson(inputData)
 
 try {
     lock("${context.application}-${context.branchName}-build") {
 		node("master"){
-            ['aa','ig'].each{ prodid ->
+           "${context.settings.ProductIds}".each{ prodId ->
                 
                 // AA
                 if (prodid == "AA" || prodid == "aa") {
@@ -82,44 +72,7 @@ try {
                     }
                     
                 }
-
-                // IG
-                if (prodid == "ig" || prodid == "IG") {
-                    println "${prodid}"
-
-                    try {
-
-                        stage("SCM"){
-                            cleanWs()
-                            checkout scm
-                            echo("Stage: SCM")
-                        }
-
-                        stage("Build Infra") {
-                            echo("Stage: Build Infra")
-                        }
-
-                        stage('Package') {                        
-                            packageIAM()
-                        }
-                        
-                        stage("Unit Tests") {                   
-                            echo("Stage: Unit Tests")
-                        }
-
-                        stage("Code Analytics") {
-                            echo("Stage: Code Analytics")
-                        }
-
-                        stage("Package") {                    
-                            echo("Stage: Package")
-                        }
-                    }
-                    finally {
-                        cleanWs notFailBuild: true
-                    }
                     
-                }
             }
 				
 		}
@@ -592,8 +545,6 @@ def runApps(InfraModel model, def context, def regionMap) {
 //     finally{
         
 //     }
-
-
 }
 
 def loadRegionMap(flags){
