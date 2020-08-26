@@ -166,9 +166,7 @@ def packageIAM()
                 //   '''
                 sh '''
                     echo "packageIAM"
-                '''
-                }
-            
+                '''            
 }
 
 def dockerizeMainAPI(def context)
