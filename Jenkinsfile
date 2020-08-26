@@ -1,12 +1,15 @@
+#!groovy
+
 def infra = new InfraModel()
 def flags = new BranchFlags("${env.BRANCH_NAME}")
-
-// library 'common-libraries'
 
 def context = [
     now                 : new Date(),
     branchName          : flags._branchName,
-    version             : env.BUILD_NUMBER,    
+    version             : env.BUILD_NUMBER,
+    application         : "coe_ssa_saas",
+    applicationUriRoot  : "coe_ssa_saas",
+    applicationVersion  : "0.1.0",
     profile             : flags.isReleasableBranch() ? "coe_ssa_saas-prod" : "coe_ssa_saas-dev",
     uuid                : flags.isHotfixOrFeature() ? getBranchUuid(flags._branchName) : "",    
     region              : flags.isReleasableBranch() ? "us-east-1" : "us-east-1",
@@ -30,59 +33,45 @@ println "uuid='${context.uuid}'"
 try {
     lock("${context.application}-${context.branchName}-build") {
 		node("master"){
-            
-            def inputData = readFile('Jenkinsfile.UnsecuredSettings.json')
-            context.settings = parseJson(inputData)
 
-           "${context.settings.ProductIds}".each{ prodId ->
-                
-                // AA
-                if (prodid == "AA" || prodid == "aa") {
-                    println "${prodid}"
+            try {
 
-                    try {
-
-                        stage("SCM") {
-                            cleanWs()
-                            checkout scm
-                            echo("Stage: SCM")
-                        }
-
-                        stage("Build Infra") {
-                            echo("Stage: Build Infra")
-                        }
-
-                        stage('Package') {                        
-                            packageIAM()
-                        }
-
-                        stage("Unit Tests") {                   
-                            echo("Stage: Unit Tests")
-                        }
-
-                        stage("Code Analytics") {
-                            echo("Stage: Code Analytics")
-                        }
-
-                        stage("Package") {                    
-                            echo("Stage: Package")
-                        }
-                    }
-                    finally {
-                        cleanWs notFailBuild: true
-                    }
+                stage("Checkout") {
                     
+                    cleanWs()
+                    checkout scm
+                    
+                    def inputData = readFile('Jenkinsfile.UnsecuredSettings.json')
+                    context.settings = parseJson(inputData)
+
                 }
-                    
+
+                "${context.settings.ProductIds}".each { prodId ->
+
+                    stage("Build Infra - ${prodId}") {
+                        
+                        buildInfra("${prodId}", "${ENV_NAME}")                        
+
+                    }
+
+                    stage("Build Code - ${prodId}") {
+                        
+                        buildCode("${prodId}", "${ENV_NAME}")                        
+
+                    }
+
+                }
+
+            }
+            finally {
+                cleanWs notFailBuild: true
             }
 				
 		}
     }
 }
 catch (Exception e){
-    println "ERROR: '${context.application}-api' branch '${env.BRANCH_NAME}' build #${env.BUILD_NUMBER} failed with error: ${e}. (<${env.BUILD_URL}|Open>)"
-    //can we replace this with a Teams send ??  To a group??    
-    //slackSend channel: "#${context.application}-api", teamDomain: 'coe_ssa_saassupport', token: '????', color: 'danger', message: "'${context.application}-api' branch '${env.BRANCH_NAME}' build #${env.BUILD_NUMBER} failed with error: ${e}. (<${env.BUILD_URL}|Open>)"    
+    println "ERROR: '${context.application}-api' branch '${env.BRANCH_NAME}' build #${env.BUILD_NUMBER} failed with error: ${e}. (<${env.BUILD_URL}|Open>)" 
     throw e
 }
 
@@ -119,6 +108,14 @@ def echo(String message) {
 String getBranchUuid(String branchName) { 
     def index = branchName.indexOf('-')
     return index >= 0 ? branchName.substring(index + 1) : branchName
+}
+
+def buildInfra(def prodId, def envName){
+    echo("Building Infra for ${prodId} in ${envName}")
+}
+
+def buildCode(def prodId, def envName){
+    echo("Building Code for ${prodId} in ${envName}")
 }
 
 def packageIAM()
