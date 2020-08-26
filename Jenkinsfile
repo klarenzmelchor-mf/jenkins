@@ -1,6 +1,3 @@
-
-#!groovy
-
 def infra = new InfraModel()
 def flags = new BranchFlags("${env.BRANCH_NAME}")
 
