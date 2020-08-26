@@ -1,12 +1,6 @@
 {
     "ProductIds": {
-        "Default": "aa",
-        "AA": "aa",
-        "IG": "ig",
-        "IDMPortal": "idmportal",
-        "Interset": "interset",
-        "Arcsight": "arcsight",
-        "FASDPP": "fasdpp"
+        "Default": ["aa", "ig", "idmportal", "interset", "arcsight", "fasdpp"]
     },
     "Environments": {
         "Default": "test",
