@@ -67,9 +67,9 @@ try {
 				}
 
                 stage('Package') {
-                    step{
-                        packageIAM()
-                   }
+                
+                    packageIAM()
+                
                 }
 				stage("Unit Tests") {                   
                     // runUnitTests(
@@ -93,9 +93,7 @@ try {
 			}
 			finally {
 				//step([$class: 'WsCleanup', notFailBuild: true])   
-                step{
-                    cleanWs(notFailBuild=true)
-                }
+                cleanWs(notFailBuild=true)
 			}
 		}
     }
