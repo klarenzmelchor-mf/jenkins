@@ -50,19 +50,19 @@ try {
 
                 context.settings.ProductIds.Default.each{ prodId ->
 
-                    stage("Build Infra - ${prodId}") {
-                        
-                        buildInfra(prodId, ENV_NAME)                        
-
-                    }
-
                     stage("Build Code - ${prodId}") {
                         
                         buildCode(prodId, ENV_NAME)                        
 
                     }
 
-                }
+                    stage("Build Infra - ${prodId}") {
+                        
+                        buildInfra(prodId, ENV_NAME)                        
+
+                    }
+
+                                    }
 
             }
 
@@ -122,8 +122,7 @@ String getBranchUuid(String branchName) {
 
 def buildInfra(def prodId, def environment){
     println "Building Infra for ${prodId} in ${environment}"
-
-    build job: "test-infra/${environment}", propagate: true, wait: true
+    buildJob("test-infra", prodId, environment)    
 }
 
 def buildCode(def prodId, def environment){
@@ -158,6 +157,16 @@ def buildCode(def prodId, def environment){
 //                 break;
 //             default:
 // }
+
+def buildJob(def jobName, def prodId, def environment){
+    println "Building job ${jobName}/${environment}"
+    build job: "${jobName}/${environment}", propagate: true, wait: true,
+        parameters: [
+            string(name: "productId", value: prodId),
+            string(name: "region": value: "us-east-1")
+            string(name: "environment": value: environment)
+        ]
+}
 
 def loadRegionMap(flags){
     return [
