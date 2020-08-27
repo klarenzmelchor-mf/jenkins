@@ -123,8 +123,7 @@ String getBranchUuid(String branchName) {
 def buildInfra(def prodId, def environment){
     println "Building Infra for ${prodId} in ${environment}"
 
-    
-
+    build job: "test-infra/${environment}", propagate: true, wait: true
 }
 
 def buildCode(def prodId, def environment){
@@ -145,12 +144,11 @@ def buildCode(def prodId, def environment){
 }
 
 // def triggerBuild(def prodId){
-//     println "Triggering build for ${prodId}"
-
+    
 //     switch (prodId) {
 //             case "aa" || "AA":
 //                 runUnitTest(prodId, environment)
-//             case "stage":
+//             case "ig" || "IG":
                 
 //                 break;
 //             case "prod":
