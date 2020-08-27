@@ -40,10 +40,14 @@ try {
 
                     stage("Build Code - ${productId}") {
                         
-                        if ( ! context.settings.InfraFlag.Default ){
+                        parallel(
+                            mainAPI: { 
+                                if ( ! context.settings.InfraFlag.Default ){
                             buildCode(productId, context.settings.Environments.Development)
-                        }
-                                                    
+                                }       
+                            }
+                        )
+                                                  
                     }
 
                     stage("Build Infra - ${productId}") {
