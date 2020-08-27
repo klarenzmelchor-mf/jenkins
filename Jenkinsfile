@@ -141,6 +141,7 @@ def buildCode(def prodId, def environment){
             break;
         default:
             println "Building Infra for ${prodId} in ${environment}"
+    }
 }
 
 // def triggerBuild(def prodId){
