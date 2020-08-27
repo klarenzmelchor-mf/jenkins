@@ -48,7 +48,10 @@ try {
 
                     stage("Build Infra - ${productId}") {
                         
-                        buildInfra(productId, context.settings.Environments.Development)                        
+                        parallel(
+                            buildInfra(productId, context.settings.Environments.Development) 
+                        )
+                                               
 
                     }
 
