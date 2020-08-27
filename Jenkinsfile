@@ -160,13 +160,10 @@ def buildCode(def prodId, def environment){
 
 def buildJob(def jobName, def prodId, def environment){
     println "Building job ${jobName}/${environment}"
-    build job: "${jobName}/${environment}", propagate: true, wait: true,
-        parameters: [
-            string(name: "productId", value: prodId),
-            string(name: "region", value: "us-east-1"),
-            string(name: "environment", value: environment)
-        ]
-}
+    prodIdValue = prodId
+    regionValue = us-east-1
+    environmentValue = environment
+    build job: "${jobName}/${environment}", propagate: true, wait: true
 
 def loadRegionMap(flags){
     return [
