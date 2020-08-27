@@ -148,7 +148,7 @@ def runUnitTests(def productId, def envName){
     println "Running Unit Tests ${productId}/${envName}"
 }
 
-def runInegrationTests(def productId, def envName){
+def runIntegrationTests(def productId, def envName){
     println "Running Integration Tests ${productId}/${envName}"
 }
 
