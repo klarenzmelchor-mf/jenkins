@@ -9,22 +9,11 @@ def context = [
     version             : env.BUILD_NUMBER,
     application         : "coe_ssa_saas",
     applicationUriRoot  : "coe_ssa_saas",
-    applicationVersion  : "0.1.0",
-    profile             : flags.isReleasableBranch() ? "coe_ssa_saas-prod" : "coe_ssa_saas-dev",
-    uuid                : flags.isHotfixOrFeature() ? getBranchUuid(flags._branchName) : "",    
-    region              : flags.isReleasableBranch() ? "us-east-1" : "us-east-1",
-    account             : flags.isReleasableBranch() ? "prod" : "dev",
-    accountnumber       : flags.isReleasableBranch() ? "621270530972" : "621270530972",
-    isUnique            : flags.isHotfixOrFeature() ? "yes" : "no",
-    errorPolicy         : flags.isReleasableBranch() ? "Never" : "Always",
-    loggingLevel        : flags.isReleasableBranch() ? "Info" : "Trace",
-    s3JobName           : "${env.JOB_NAME}".replaceAll('%2F', '%252F'),        
+    applicationVersion  : "0.1.0",        
 ]
 
-def regionMap = loadRegionMap(flags)
-
 println "Pipeline Version='${context.version}'"
-println "Environment='${ENV_NAME}'"
+println "envName='${ENV_NAME}'"
 println "Branch name='${env.BRANCH_NAME}'"
 println "Job name='${env.JOB_NAME}'"
 println "Build number='${env.BUILD_NUMBER}'"
@@ -48,17 +37,19 @@ try {
 
                 }
 
-                context.settings.ProductIds.Default.each{ prodId ->
+                context.settings.ProductIds.Default.each{ productId ->
 
-                    stage("Build Code - ${prodId}") {
+                    stage("Build Code - ${productId}") {
                         
-                        buildCode(prodId, ENV_NAME)                        
-
+                        if ( ! context.settings.InfraFlag.Default ){
+                            buildCode(productId, context.settings.Environments.Development)
+                        }
+                                                    
                     }
 
-                    stage("Build Infra - ${prodId}") {
+                    stage("Build Infra - ${productId}") {
                         
-                        buildInfra(prodId, ENV_NAME)                        
+                        buildInfra(productId, context.settings.Environments.Development)                        
 
                     }
 
@@ -94,15 +85,15 @@ parseJson(inputData) {
 }
 
 @NonCPS
-def getSetting(settings, settingName, environment) {
+def getSetting(settings, settingName, envName) {
     def settingNameCap = settingName.capitalize()
 
     if (settings[settingNameCap] != null) {
         def envSettings = settings[settingNameCap]
-        def environmentCap = environment.capitalize()
+        def envNameCap = envName.capitalize()
 
-        if (envSettings[environmentCap] != null) {
-            envSettings[environmentCap]
+        if (envSettings[envNameCap] != null) {
+            envSettings[envNameCap]
         } else if (envSettings["Default"] != null) {
             return envSettings["Default"]
         } else {
@@ -115,107 +106,62 @@ def echo(String message) {
     bat "@echo ${message}"
 }
 
-String getBranchUuid(String branchName) { 
-    def index = branchName.indexOf('-')
-    return index >= 0 ? branchName.substring(index + 1) : branchName
+def buildInfra(def productId, def envName){
+    println "Building Infra for ${productId} in ${envName}"
+    runTerraform   
 }
 
-def buildInfra(def prodId, def environment){
-    println "Building Infra for ${prodId} in ${environment}"
-    buildJob("test-infra", prodId, environment)    
-}
+def buildCode(def productId, def envName){
+    println "Building Code for ${productId} in ${envName}"
 
-def buildCode(def prodId, def environment){
-    //println "Building Infra for ${prodId} in ${environment}"
-
-    switch (environment) {
+    switch (envName) {
         case "dev":
-            println "Building Infra for ${prodId} in ${environment}"
+            runUnitTests(productId,envName)
         case "stage":
-            println "Building Infra for ${prodId} in ${environment}"
+            runTerragrunt(productId,envName)
+            runUnitTests(productId,envName)
+            runIntegrationTests(productId,envName)
+            runSecurityTests(productId,envName)
+            runLoadTests(productId,envName)
             break;
         case "prod":
-            println "Building Infra for ${prodId} in ${environment}"
+            runTerragrunt(productId,envName)
+            runLoadTests(productId,envName)
+            runSmokeTests(productId,envName)
             break;
         default:
-            println "Building Infra for ${prodId} in ${environment}"
+            echo("Do nothing")
     }
 }
 
-// def triggerBuild(def prodId){
-    
-//     switch (prodId) {
-//             case "aa" || "AA":
-//                 runUnitTest(prodId, environment)
-//             case "ig" || "IG":
-                
-//                 break;
-//             case "prod":
-//                 this.stage = "${environment}v1"
-//                 this.basePath = 'v1'
-//                 this.dbStack = "rds-${context.application}-aurora-${environment}"  //assuming aurora postgres for database???
-//                 break;
-//             default:
-// }
-
-def buildJob(def jobName, def prodId, def envName){
-    println "Building job ${jobName}/${envName}"
-    productIdValue = prodId
-    regionValue = "us-east-1"
-    envNameValue = envName
-    build job: "${jobName}/${envName}", propagate: true, wait: true
+def runTerragrunt(def jobName, def productId, def envName){
+    println "Running Terragrunt ${jobName}/${envName} \n Region: ${context.settings.Regions.Default}"
+    //build job: "${jobName}/${envName}", propagate: true, wait: true
 }
 
-def loadRegionMap(flags){
-    return [
-        "us-east-1": [
-            name             : "US East (N. Virginia)",
-            regionCountryCode: "us"
-        ],
-        "us-east-2": [
-            name             : "US East (Ohio)",
-            regionCountryCode: "us"
-        ],
-        "us-west-1": [
-            name             : "US West (N. California)",
-            regionCountryCode: "us"
-        ],
-        "us-west-2": [
-            name             : "US West (Oregon)",
-            regionCountryCode: "us"
-        ],
-        "ca-central-1": [
-            name             : "Canada (Central)",
-            regionCountryCode: "ca"
-        ],
-        "eu-west-1": [
-            name             : "EU (Ireland)"
-        ],
-        "eu-central-1": [
-            name             : "EU (Frankfurt)"
-        ],
-        "eu-west-2": [
-            name             : "EU (London)"
-        ],
-        "ap-northeast-1": [
-            name             : "Asia Pacific (Tokyo)"
-        ],
-        "ap-northeast-2": [
-            name             : "Asia Pacific (Seoul)"
-        ],
-        "ap-southeast-1": [
-            name             : "Asia Pacific (Singapore)"
-        ],
-        "ap-southeast-2": [
-            name             : "Asia Pacific (Sydney)"
-        ],
-        "ap-south-1": [
-            name             : "Asia Pacific (Mumbai)"
-        ],
-        "sa-east-1": [
-            name             : "South America (S�o Paulo)"
-        ]
-    ]
+def triggerBuild(def jobName, def productId, def envName){
+    println "Triggering build ${jobName}/${envName}"
+    //build job: "${jobName}/${envName}", propagate: true, wait: true
+}
+
+def runUnitTests(def productId, def envName){
+    println "Running Unit Tests ${productId}/${envName}"
+}
+
+def runInegrationTests(def productId, def envName){
+    println "Running Integration Tests ${productId}/${envName}"
+}
+
+def runSecurityTests(def productId, def envName){
+    println "Running Security Tests ${productId}/${envName}"
+}
+
+def runLoadTests(def productId, def envName){
+    println "Running Load Tests ${productId}/${envName}"
+}
+
+def runSomkeTests(def productId, def envName){
+    println "Running Smoke Tests ${productId}/${envName}"
 }
 
 class BranchFlags implements Serializable {
@@ -256,32 +202,32 @@ class BranchFlags implements Serializable {
 
 class InfraModel implements Serializable {
 
-    String environment
-    String properEnvironment
+    String envName
+    String properenvName
     String stage
     String basePath
     String dbStack
     String stackName
     String dynamoStackName
-    String stackEnvironment
-    String branchEnvironment
+    String stackenvName
+    String branchenvName
 
-    def reset(context, environment, properEnvironment) {
-        this.environment = environment
-        this.properEnvironment = properEnvironment
-        this.dbStack = "rds-api-shared-aurora-${environment}"
-        this.branchEnvironment = environment
+    def reset(context, envName, properenvName) {
+        this.envName = envName
+        this.properenvName = properenvName
+        this.dbStack = "rds-api-shared-aurora-${envName}"
+        this.branchenvName = envName
 
-        switch (environment) {
+        switch (envName) {
             case "dev":
             case "stage":
-                this.stage = "${environment}v1"
+                this.stage = "${envName}v1"
                 this.basePath = 'v1'
                 break;
             case "prod":
-                this.stage = "${environment}v1"
+                this.stage = "${envName}v1"
                 this.basePath = 'v1'
-                this.dbStack = "rds-${context.application}-aurora-${environment}"  //assuming aurora postgres for database???
+                this.dbStack = "rds-${context.application}-aurora-${envName}"  //assuming aurora postgres for database???
                 break;
             default:
                 this.stage = this.cleanBranchName(context)
@@ -289,13 +235,13 @@ class InfraModel implements Serializable {
                 break;
         }
 
-        this.stackName = "${context.application}-${environment}"
-        this.dynamoStackName = "dynamo-${context.application}-${environment}"
-        this.stackEnvironment = "${environment}"
+        this.stackName = "${context.application}-${envName}"
+        this.dynamoStackName = "dynamo-${context.application}-${envName}"
+        this.stackenvName = "${envName}"
         if (context.uuid != "") {
-            this.stackName = "${context.application}-${environment}-${context.uuid}"
-            this.stackEnvironment = "${environment}-${context.uuid}"
-            this.branchEnvironment = context.uuid
+            this.stackName = "${context.application}-${envName}-${context.uuid}"
+            this.stackenvName = "${envName}-${context.uuid}"
+            this.branchenvName = context.uuid
         }
     }
 
