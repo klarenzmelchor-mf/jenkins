@@ -135,7 +135,7 @@ def buildCode(def productId, def envName){
 
 def runTerragrunt(def productId, def envName){
     def jobName = "test-infra"
-    println "Running Terragrunt ${jobName}/${envName} \n Region: ${context.settings.Regions.Default}"
+    println "Running Terragrunt ${jobName}/${envName}"
     //build job: "${jobName}/${envName}", propagate: true, wait: true
 }
 
