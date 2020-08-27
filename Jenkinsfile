@@ -40,21 +40,13 @@ try {
 
                     stage("Build Code - ${productId}") {
                         
-                        parallel(
-                            mainAPI: { 
-                                if ( ! context.settings.InfraFlag.Default ){
-                            buildCode(productId, context.settings.Environments.Development)
-                                }       
-                            }
-                        )
+                        buildCode(productId, context.settings.Environments.Development)
                                                   
                     }
 
                     stage("Build Infra - ${productId}") {
                         
-                        parallel(
-                            mainAPI: { buildInfra(productId, context.settings.Environments.Development) }
-                        )                                             
+                        buildInfra(productId, context.settings.Environments.Development)
 
                     }
 
@@ -89,24 +81,6 @@ parseJson(inputData) {
     return jsonData
 }
 
-@NonCPS
-def getSetting(settings, settingName, envName) {
-    def settingNameCap = settingName.capitalize()
-
-    if (settings[settingNameCap] != null) {
-        def envSettings = settings[settingNameCap]
-        def envNameCap = envName.capitalize()
-
-        if (envSettings[envNameCap] != null) {
-            envSettings[envNameCap]
-        } else if (envSettings["Default"] != null) {
-            return envSettings["Default"]
-        } else {
-            return null
-        }
-    }
-}
-
 def echo(String message) {
     bat "@echo ${message}"
 }
@@ -118,6 +92,8 @@ def buildInfra(def productId, def envName){
 
 def buildCode(def productId, def envName){
     println "Building Code for ${productId} in ${envName}"
+
+    fetchArtifacts(productId,envName)
 
     switch (envName) {
         case "dev":
@@ -142,12 +118,11 @@ def buildCode(def productId, def envName){
 def runTerragrunt(def productId, def envName){
     def jobName = "test-infra"
     println "Running Terragrunt ${jobName}/${envName}"
-    build job: "${jobName}/${envName}", propagate: true, wait: true
+    //build job: "${jobName}/${envName}", propagate: true, wait: true
 }
 
-def triggerBuild(def jobName, def productId, def envName){
-    println "Triggering build ${jobName}/${envName}"
-    //build job: "${jobName}/${envName}", propagate: true, wait: true
+def fetchArtifacts(def productId, def envName){
+    println "Fetching Artifacts ${productId}/${envName}"
 }
 
 def runUnitTests(def productId, def envName){
