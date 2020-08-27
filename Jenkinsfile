@@ -138,7 +138,7 @@ def buildCode(def productId, def envName){
 def runTerragrunt(def productId, def envName){
     def jobName = "test-infra"
     println "Running Terragrunt ${jobName}/${envName}"
-    //build job: "${jobName}/${envName}", propagate: true, wait: true
+    build job: "${jobName}/${envName}", propagate: true, wait: true
 }
 
 def triggerBuild(def jobName, def productId, def envName){
