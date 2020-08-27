@@ -1,6 +1,5 @@
 #!groovy
 
-def infra = new InfraModel()
 def flags = new BranchFlags("${env.BRANCH_NAME}")
 
 def context = [
@@ -108,7 +107,7 @@ def echo(String message) {
 
 def buildInfra(def productId, def envName){
     println "Building Infra for ${productId} in ${envName}"
-    runTerraform   
+    runTerragrunt(productId,envName)
 }
 
 def buildCode(def productId, def envName){
@@ -134,7 +133,8 @@ def buildCode(def productId, def envName){
     }
 }
 
-def runTerragrunt(def jobName, def productId, def envName){
+def runTerragrunt(def productId, def envName){
+    def jobName = "test-infra"
     println "Running Terragrunt ${jobName}/${envName} \n Region: ${context.settings.Regions.Default}"
     //build job: "${jobName}/${envName}", propagate: true, wait: true
 }
@@ -197,69 +197,5 @@ class BranchFlags implements Serializable {
 
     boolean isReleasableBranch() {
         this.isHotfix() || this.isReleaseBranch()
-    }
-}
-
-class InfraModel implements Serializable {
-
-    String envName
-    String properenvName
-    String stage
-    String basePath
-    String dbStack
-    String stackName
-    String dynamoStackName
-    String stackenvName
-    String branchenvName
-
-    def reset(context, envName, properenvName) {
-        this.envName = envName
-        this.properenvName = properenvName
-        this.dbStack = "rds-api-shared-aurora-${envName}"
-        this.branchenvName = envName
-
-        switch (envName) {
-            case "dev":
-            case "stage":
-                this.stage = "${envName}v1"
-                this.basePath = 'v1'
-                break;
-            case "prod":
-                this.stage = "${envName}v1"
-                this.basePath = 'v1'
-                this.dbStack = "rds-${context.application}-aurora-${envName}"  //assuming aurora postgres for database???
-                break;
-            default:
-                this.stage = this.cleanBranchName(context)
-                this.basePath = this.cleanBranchName(context)
-                break;
-        }
-
-        this.stackName = "${context.application}-${envName}"
-        this.dynamoStackName = "dynamo-${context.application}-${envName}"
-        this.stackenvName = "${envName}"
-        if (context.uuid != "") {
-            this.stackName = "${context.application}-${envName}-${context.uuid}"
-            this.stackenvName = "${envName}-${context.uuid}"
-            this.branchenvName = context.uuid
-        }
-    }
-
-    def cleanBranchName(context) {
-        def output
-
-        if (context.branchName.contains("-")) {
-            output = context.branchName.replaceAll('-', '')
-        }
-
-        if (context.branchName.contains("/")) {
-            output = context.branchName.replaceAll('/', '_')
-        }
-
-        if (context.branchName.contains('develop')) {
-            output = "dev"
-        }
-
-        return output
     }
 }
