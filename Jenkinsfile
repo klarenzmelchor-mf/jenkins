@@ -62,7 +62,7 @@ try {
 
                     }
 
-                                    }
+                }
 
             }
 
@@ -158,12 +158,12 @@ def buildCode(def prodId, def environment){
 //             default:
 // }
 
-def buildJob(def jobName, def prodId, def environment){
-    println "Building job ${jobName}/${environment}"
-    prodIdValue = prodId
+def buildJob(def jobName, def prodId, def envName){
+    println "Building job ${jobName}/${envName}"
+    productIdValue = prodId
     regionValue = "us-east-1"
-    environmentValue = environment
-    build job: "${jobName}/${environment}", propagate: true, wait: true
+    envNameValue = envName
+    build job: "${jobName}/${envName}", propagate: true, wait: true
 }
 
 def loadRegionMap(flags){
