@@ -161,7 +161,7 @@ def buildCode(def prodId, def environment){
 def buildJob(def jobName, def prodId, def environment){
     println "Building job ${jobName}/${environment}"
     prodIdValue = prodId
-    regionValue = us-east-1
+    regionValue = "us-east-1"
     environmentValue = environment
     build job: "${jobName}/${environment}", propagate: true, wait: true
 }
