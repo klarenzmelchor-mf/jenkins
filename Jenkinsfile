@@ -31,7 +31,9 @@ println "Build number='${env.BUILD_NUMBER}'"
 println "uuid='${context.uuid}'"
 
 try {
+
     lock("${context.application}-${context.branchName}-build") {
+
 		node("master"){
 
             try {
@@ -50,29 +52,37 @@ try {
 
                     stage("Build Infra - ${prodId}") {
                         
-                        buildInfra("${prodId}", "${ENV_NAME}")                        
+                        buildInfra(prodId, ENV_NAME)                        
 
                     }
 
                     stage("Build Code - ${prodId}") {
                         
-                        buildCode("${prodId}", "${ENV_NAME}")                        
+                        buildCode(prodId, ENV_NAME)                        
 
                     }
 
                 }
 
             }
+
             finally {
+
                 cleanWs notFailBuild: true
+
             }
 				
 		}
+
     }
+
 }
+
 catch (Exception e){
+
     println "ERROR: '${context.application}-api' branch '${env.BRANCH_NAME}' build #${env.BUILD_NUMBER} failed with error: ${e}. (<${env.BUILD_URL}|Open>)" 
     throw e
+
 }
 
 @NonCPS
@@ -110,20 +120,50 @@ String getBranchUuid(String branchName) {
     return index >= 0 ? branchName.substring(index + 1) : branchName
 }
 
-def buildInfra(def prodId, def envName){
-    echo("Building Infra for ${prodId} in ${envName}")
+def buildInfra(def prodId, def environment){
+    println "Building Infra for ${prodId} in ${environment}"
+
+    
+
 }
 
-def buildCode(def prodId, def envName){
-    echo("Building Code for ${prodId} in ${envName}")
+def buildCode(def prodId, def environment){
+    //println "Building Infra for ${prodId} in ${environment}"
+
+    switch (environment) {
+        case "dev":
+            println "Building Infra for ${prodId} in ${environment}"
+        case "stage":
+            println "Building Infra for ${prodId} in ${environment}"
+            break;
+        case "prod":
+            println "Building Infra for ${prodId} in ${environment}"
+            break;
+        default:
 }
+
+// def triggerBuild(def prodId){
+//     println "Triggering build for ${prodId}"
+
+//     switch (prodId) {
+//             case "aa" || "AA":
+//                 runUnitTest(prodId, environment)
+//             case "stage":
+                
+//                 break;
+//             case "prod":
+//                 this.stage = "${environment}v1"
+//                 this.basePath = 'v1'
+//                 this.dbStack = "rds-${context.application}-aurora-${environment}"  //assuming aurora postgres for database???
+//                 break;
+//             default:
+// }
 
 def loadRegionMap(flags){
     return [
         "us-east-1": [
             name             : "US East (N. Virginia)",
-            regionCountryCode: "us",
-            bucket           : flags.isReleasableBranch() ? "coe_ssa_saas-artifacts-us-east-1" : "coe_ssa_saas-artifacts-dev-us-east-1",
+            regionCountryCode: "us"
         ],
         "us-east-2": [
             name             : "US East (Ohio)",
@@ -139,8 +179,7 @@ def loadRegionMap(flags){
         ],
         "ca-central-1": [
             name             : "Canada (Central)",
-            regionCountryCode: "ca",
-            bucket           : "coe_ssa_saas-artifacts-ca-central-1",
+            regionCountryCode: "ca"
         ],
         "eu-west-1": [
             name             : "EU (Ireland)"
