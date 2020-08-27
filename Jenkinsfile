@@ -164,6 +164,7 @@ def buildJob(def jobName, def prodId, def environment){
     regionValue = us-east-1
     environmentValue = environment
     build job: "${jobName}/${environment}", propagate: true, wait: true
+}
 
 def loadRegionMap(flags){
     return [
