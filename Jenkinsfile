@@ -163,7 +163,7 @@ def buildJob(def jobName, def prodId, def environment){
     build job: "${jobName}/${environment}", propagate: true, wait: true,
         parameters: [
             string(name: "productId", value: prodId),
-            string(name: "region", value: "us-east-1")
+            string(name: "region", value: "us-east-1"),
             string(name: "environment", value: environment)
         ]
 }
